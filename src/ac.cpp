@@ -31,6 +31,9 @@ void Ac::begin() {
         Serial.println("RUNNING IN PANASONIC MODE");
         panasonic.begin();
         panasonic.setModel(kPanasonicRkr);
+    } else if (mode == HITACHI) {
+        Serial.println("RUNNING IN HITACHI MODE");
+        hitachi.begin();
     }
 
     // restore settings
@@ -97,7 +100,7 @@ void Ac::getWeather() {
 }
 
 String Ac::toJson() {
-    DynamicJsonDocument doc(1024);    
+    DynamicJsonDocument doc(1024);
 
     doc["currentTemperature"] = currentTemperature;
     doc["currentHumidity"] = currentHumidity;
@@ -174,6 +177,10 @@ void Ac::send() {
         Serial.println(panasonic.toString());
         panasonic.send();
 #endif  // SEND_PANASONIC_AC
+    } else if (mode == HITACHI) {
+#if SEND_HITACHI_AC
+        hitachi.send();
+#endif  // SEND_HITACHI_AC
     }
 
     // flash LED OFF
@@ -194,6 +201,8 @@ void Ac::setTargetMode(String value) {
             daikin.off();
         } else if (mode == PANASONIC) {
             panasonic.off();
+        } else if (mode == HITACHI) {
+            hitachi.off();
         }
     } else if (value == "cool") {
         if (mode == DAIKIN) {
@@ -202,6 +211,9 @@ void Ac::setTargetMode(String value) {
         } else if (mode == PANASONIC) {
             panasonic.on();
             panasonic.setMode(kPanasonicAcCool);
+        } else if (mode == HITACHI) {
+            hitachi.on();
+            hitachi.setMode(kHitachiAcCool);
         }
     } else if (value == "heat") {
         if (mode == DAIKIN) {
@@ -210,6 +222,9 @@ void Ac::setTargetMode(String value) {
         } else if (mode == PANASONIC) {
             panasonic.on();
             panasonic.setMode(kPanasonicAcHeat);
+        } else if (mode == HITACHI) {
+            hitachi.on();
+            hitachi.setMode(kHitachiAcHeat);
         }
     } else if (value == "fan") {
         if (mode == DAIKIN) {
@@ -218,6 +233,9 @@ void Ac::setTargetMode(String value) {
         } else if (mode == PANASONIC) {
             panasonic.on();
             panasonic.setMode(kPanasonicAcFan);
+        } else if (mode == HITACHI) {
+            hitachi.on();
+            hitachi.setMode(kHitachiAcFan);
         }
     } else if (value == "auto") {
         if (mode == DAIKIN) {
@@ -226,6 +244,9 @@ void Ac::setTargetMode(String value) {
         } else if (mode == PANASONIC) {
             panasonic.on();
             panasonic.setMode(kPanasonicAcAuto);
+        } else if (mode == HITACHI) {
+            hitachi.on();
+            hitachi.setMode(kHitachiAcAuto);
         }
     } else if (value == "dry") {
         if (mode == DAIKIN) {
@@ -234,6 +255,9 @@ void Ac::setTargetMode(String value) {
         } else if (mode == PANASONIC) {
             panasonic.on();
             panasonic.setMode(kPanasonicAcDry);
+        } else if (mode == HITACHI) {
+            hitachi.on();
+            hitachi.setMode(kHitachiAcDry);
         }
     } else {
         Serial.println("WARNING: No Valid Mode Passed. Turning Off.");
@@ -242,6 +266,9 @@ void Ac::setTargetMode(String value) {
             value = "off";
         } else if (mode == PANASONIC) {
             panasonic.off();
+            value = "off";
+        } else if (mode == HITACHI) {
+            hitachi.off();
             value = "off";
         }
     }
@@ -261,24 +288,32 @@ void Ac::setTargetFanSpeed(String value) {
             daikin.setFan(DAIKIN_FAN_AUTO);
         } else if (mode == PANASONIC) {
             panasonic.setFan(kPanasonicAcFanAuto);
+        } else if (mode == HITACHI) {
+            hitachi.setFan(kHitachiAcFanAuto);
         }
     } else if (value == "min") {
         if (mode == DAIKIN) {
             daikin.setFan(DAIKIN_FAN_MIN);
         } else if (mode == PANASONIC) {
             panasonic.setFan(kPanasonicAcFanMin);
+        } else if (mode == HITACHI) {
+            hitachi.setFan(kHitachiAcFanLow);
         }
     } else if (value == "max") {
         if (mode == DAIKIN) {
             daikin.setFan(DAIKIN_FAN_MAX);
         } else if (mode == PANASONIC) {
             panasonic.setFan(kPanasonicAcFanMax);
+        } else if (mode == HITACHI) {
+            hitachi.setFan(kHitachiAcFanHigh);
         }
     } else {
         if (mode == DAIKIN) {
             daikin.setFan(DAIKIN_FAN_AUTO);
         } else if (mode == PANASONIC) {
             panasonic.setFan(kPanasonicAcFanAuto);
+        } else if (mode == HITACHI) {
+            hitachi.setFan(kHitachiAcFanAuto);
         }
         value = "auto";
         Serial.println("WARNING: No Valid Fan Speed Passed. Setting to Auto.");
@@ -297,6 +332,8 @@ void Ac::setTemperature(int value) {
         daikin.setTemp(value);
     } else if (mode == PANASONIC) {
         panasonic.setTemp(value);
+    } else if (mode == HITACHI) {
+        hitachi.setTemp(value);
     }
     Serial.print("Target Temperature: ");
     Serial.println(value);
@@ -308,6 +345,8 @@ void Ac::setVerticalSwing(bool value) {
         daikin.setSwingVertical(value);
     } else if (mode == PANASONIC) {
         panasonic.setSwingVertical(value ? kPanasonicAcSwingVAuto : kPanasonicAcSwingVHighest);
+    } else if (mode == HITACHI) {
+        hitachi.setSwingVertical(value);
     }
     if (value != verticalSwing) {
         Serial.print("Verticle Swing: ");
@@ -322,6 +361,8 @@ void Ac::setHorizontalSwing(bool value) {
         daikin.setSwingHorizontal(value);
     } else if (mode == PANASONIC) {
         panasonic.setSwingHorizontal(value ? kPanasonicAcSwingHAuto : kPanasonicAcSwingHMiddle);
+    } else if (mode == HITACHI) {
+        hitachi.setSwingHorizontal(value);
     }
     if (value != horizontalSwing) {
         Serial.print("Horizontal Swing: ");
@@ -336,6 +377,7 @@ void Ac::setQuietMode(bool value) {
         daikin.setQuiet(value);
     } else if (mode == PANASONIC) {
         panasonic.setQuiet(value);
+    } else if (mode == HITACHI) {
     }
     if (value != quietMode) {
         Serial.print("Quiet Mode: ");
@@ -355,6 +397,7 @@ void Ac::setPowerfulMode(bool value) {
         daikin.setPowerful(value);
     } else if (mode == PANASONIC) {
         panasonic.setPowerful(value);
+    } else if (mode == HITACHI) {
     }
     if (value != powerfulMode) {
         Serial.print("Powerful Mode: ");
